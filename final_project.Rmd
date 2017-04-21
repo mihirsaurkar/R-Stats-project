@@ -1,0 +1,336 @@
+---
+title: "Final Project"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+```{r EI, echo=TRUE}
+
+Data_Cormat <- read.csv("C:\\Users\\mihir\\Desktop\\Stats Project\\Data_Cormat.csv",stringsAsFactors = T)
+
+str(Data_Cormat)
+
+Data_Cormat$Q15 <- as.numeric(Data_Cormat$Q15)
+
+library(psych)
+cormat<-cor(na.omit(Data_Cormat[,c(2,3,4,5,6)]))
+cormat<-round(cormat,2)
+
+library(corrplot)
+describe(Data_Cormat)
+#install.packages("corrplot")
+corrplot(cormat, method="circle")
+corrplot(cormat, method="circle", addCoef.col="grey")
+
+emp_perf_encouragement <- read.csv("C:\\Users\\mihir\\Desktop\\Stats Project\\PEI_HighPop.csv",stringsAsFactors = T)
+
+str(emp_perf_encouragement)
+
+
+levels(emp_perf_encouragement$degree)
+library(plyr)
+emp_perf_encouragement$degree <- revalue(emp_perf_encouragement$degree, c("A"="HS Diploma", "B"="Bachelors Degree", "C"="Post Bachelors degree"))
+levels(emp_perf_encouragement$degree)
+
+levels(emp_perf_encouragement$pay_grade)
+emp_perf_encouragement$pay_grade <- revalue(emp_perf_encouragement$pay_grade, c("A"="GS 7-12", "B"="GS 12-15", "C"="Other"))
+levels(emp_perf_encouragement$pay_grade)
+
+levels(emp_perf_encouragement$disability)
+emp_perf_encouragement$disability <- revalue(emp_perf_encouragement$disability, c("A"="YES", "B"="NO"))
+levels(emp_perf_encouragement$disability)
+
+levels(emp_perf_encouragement$age)
+emp_perf_encouragement$age <- revalue(emp_perf_encouragement$age, c("A"="lt40", "B"="40-49" ,"C"="50-59","D"="gte60"))
+levels(emp_perf_encouragement$age)
+
+levels(emp_perf_encouragement$attrition)
+emp_perf_encouragement$attrition <- revalue(emp_perf_encouragement$attrition, c("A"="NO", "B"="Yes-Federaljob" ,"C"="Yes-otherjob","D"="yes-Other"))
+levels(emp_perf_encouragement$attrition)
+
+levels(emp_perf_encouragement$sex)
+emp_perf_encouragement$sex <- revalue(emp_perf_encouragement$sex, c("A"="Male", "B"="Female"))
+levels(emp_perf_encouragement$sex)
+
+levels(emp_perf_encouragement$supervisor)
+emp_perf_encouragement$supervisor <- revalue(emp_perf_encouragement$supervisor, c("A"="No", "B"="Yes"))
+levels(emp_perf_encouragement$supervisor)
+
+str(emp_perf_encouragement)
+
+mean(emp_perf_encouragement$PEI)
+
+emp_perf_encouragement$PEI_avg[emp_perf_encouragement$PEI <= mean(emp_perf_encouragement$PEI)]<-"LOW"
+emp_perf_encouragement$PEI_avg[emp_perf_encouragement$PEI > mean(emp_perf_encouragement$PEI)]<-"HIGH"
+
+tab <- table(emp_perf_encouragement$PEI_avg,emp_perf_encouragement$sex)
+
+prop_tab <- prop.table(tab)
+
+prop_tab <- prop_tab*100
+
+plot(prop_tab,col=c("blue", "grey"),main="Sex Vs Value")
+
+emptab<-table(emp_perf_encouragement$PEI_avg,emp_perf_encouragement$degree)
+addmargins(emptab,c(1,2))
+
+pemptab<-prop.table(emptab) *100
+pemptab<- round(pemptab,2)
+plot(pemptab,col=c("blue", "grey","darkblue"),main="Education Vs Value")
+
+library(gplots)
+
+plotmeans(emp_perf_encouragement$PEI~emp_perf_encouragement$degree, xlab="Education Degree", ylab="Performace Engagement Index", lwd=3, col="red", p=0.99)
+
+emp_engagement.aov <- aov(PEI~degree, data=emp_perf_encouragement)
+
+summary(emp_engagement.aov) 
+
+emp_value.tk<-TukeyHSD(emp_engagement.aov)
+emp_value.tk
+
+#checking degree acroos department
+
+emptab<-table(emp_perf_encouragement$agency,emp_perf_encouragement$degree)
+addmargins(emptab,c(1,2))
+pemptab<- round(emptab,2)
+plot(pemptab,col=c("blue", "grey","darkblue"),main="Education accross Departments")
+
+library(gplots)
+
+plotmeans(emp_perf_encouragement$PEI~emp_perf_encouragement$agency, xlab="Agency", ylab="Performace Encouragement Index", lwd=3, col="red", p=0.99)
+
+emp_engagement.aov <- aov(PEI~agency, data=emp_perf_encouragement)
+
+summary(emp_engagement.aov) 
+
+emp_value.tk<-TukeyHSD(emp_engagement.aov)
+emp_value.tk
+
+# Employees who feel their supervisors give them opportunities to demonstrate their leadership skills have a higher PEI.
+
+#H0: Employees who feel their supervisors give them opportunities to demonstrate their leadership skills have performance Encouragement Index  same as the performance Encouragement Index of the Employees who don't.
+
+#H1: Employees who feel their supervisors give them opportunities to demonstrate their leadership skills have a higher PEI.
+
+t.test(emp_perf_encouragement$PEI,emp_perf_encouragement$leader_opp,alternative = "two.sided")
+
+
+
+# thus we Reject the Null Hypothesis, Employees who received opportunities to perform leadership roles have a higher encouragement index
+
+# combining the variables Q46 + Q44  which are renamed as super_suggest and supervisor_disc respectively both represent the similar questions if the performance review was performed and was it useful.
+
+#H0: Employees whose performance review (super_suggest : supervisor Suggestions) is provided have same Performance encouragement index as of the employees who have not had  performance review (super_suggest : supervisor Suggestions)
+
+#H1: Employees whose performance review (super_suggest : supervisor Suggestions) is provided have higher Performance encouragement index as of the employees who have not had  performance review (super_suggest : supervisor Suggestions)
+
+
+t.test(emp_perf_encouragement$PEI,emp_perf_encouragement$super_suggest+emp_perf_encouragement$supervisor_disc ,alternative = "two.sided")
+
+# Thus we reject the null hypothesis. The employee encouragement index is higher for the emplyees those receive review of their work from the manager.
+
+#H0: Employees who are given chance to improve their skills have the same Performance encouragement index as the employees who are not given change to improve their skills.
+#H1: Employees who are given a chance to improve their skills have a higher Performance encouragement index as compared to employees who are not given change to improve their skills.
+
+t.test(emp_perf_encouragement$PEI,emp_perf_encouragement$skill_improve,alternative = "two.sided")
+
+#Thus we can reject the null hypothesis, Thus employees who are given chance to improve their skills have a higher Employee Performance Encouragement index.
+
+#H0: Employees who feel encouraged to come up with better ways of doing things have the same PEI as employees who are not.
+#H1: Employees who feel encouraged to come up with better ways of doing things have a higher PEI. 
+
+t.test(emp_perf_encouragement$PEI,emp_perf_encouragement$encouraged,alternative = "two.sided")
+
+#Thus rejecting the null hypothesis, Employees who feel encouraged to come up with better ways of doing things have a higher PEI.
+
+#H0: Employees who use their talents at the workplace have the same  PEI as those employees who think their talents are not used at the workplace.
+#H1: Employees who use their talents at the workplace have a higher  PEI than PEI of those employees who think their talents are not used at the workplace.
+
+t.test(emp_perf_encouragement$PEI,emp_perf_encouragement$talents_used,alternative = "two.sided")
+
+# Thus we reject the null hypothesis, Employees who use their talents at the workplace have a higher  PEI than PEI of those employees who think their talents are not used at the workplace.
+
+#H0: Work units where differences in performance are recognized (good qualiy work is rewarded)have same PEI as work units where differences in performance are not recognized.
+#H1: Work units where differences in performance are recognized have a higher PEI.
+
+t.test(emp_perf_encouragement$PEI,emp_perf_encouragement$performance_rec,alternative = "two.sided")
+
+#Thus we reject the null Hypothesis, Work units where differences in performance are recognized (good qualiy work is rewarded) have a higher PEI.
+
+#H0: Work units where awards depend on employee performance have same EPI as compared to the work units where where awards do not depend on employee performance.
+#H1: Work units where awards depend on employee performance have a higher PEI as compared to the work units where where awards do not depend on employee performance.
+
+t.test(emp_perf_encouragement$PEI,emp_perf_encouragement$job_awards,alternative = "two.sided")
+
+#thus we can reject The null hypothesis, Work units where awards depend on employee performance have a higher PEI as compared to the work units where where awards do not depend on employee performance.
+
+str(emp_perf_encouragement)
+
+table <- table(emp_perf_encouragement$disability,emp_perf_encouragement$PEI_avg)
+addmargins(table,2)
+propTbl<-prop.table(table)
+
+propTbl<- round(propTbl,2)
+plot(propTbl,col=c("blue", "grey","darkblue"),main="Dissability against Performance encouragement index")
+
+
+library(gplots)
+
+plotmeans(emp_perf_encouragement$PEI~emp_perf_encouragement$disability, xlab="Disability", ylab="Performace Encouragement Index", lwd=3, col="red", p=0.99)
+
+#H0: Dissability does not affect PEI
+#H1: Employees with disspability hace lower PEI
+
+emp_engagement.aov <- aov(PEI~disability, data=emp_perf_encouragement)
+
+summary(emp_engagement.aov) 
+
+emp_value.tk<-TukeyHSD(emp_engagement.aov)
+emp_value.tk
+
+#The null hypotheseis can be rejected, Employees with dissability have lower Performance encouragement index.
+
+re_mod1 <- lm(PEI ~degree+agency+disability , data=emp_perf_encouragement)
+
+dev.off
+par(mfrow=c(2,2))
+summary(re_mod1)
+plot(re_mod1)
+dev.off
+par(mfrow=c(1,1))
+
+confint(re_mod1)
+plot( predict (re_mod1), residuals (re_mod1))
+plot(hatvalues(re_mod1)) 
+
+re_mod2 <- lm(PEI ~degree+agency+disability+supervisor_disc+super_suggest, data=emp_perf_encouragement)
+
+dev.off
+par(mfrow=c(2,2))
+summary(re_mod2)
+plot(re_mod2)
+dev.off
+par(mfrow=c(1,1))
+
+
+re_mod3 <- lm(PEI ~degree+agency-disability+supervisor_disc+super_suggest+performance_rec+support_ed, data=emp_perf_encouragement)
+
+dev.off
+par(mfrow=c(2,2))
+summary(re_mod3)
+plot(re_mod3)
+dev.off
+par(mfrow=c(1,1))
+
+re_mod4 <-lm(PEI ~degree+agency-disability+supervisor_disc+super_suggest+performance_rec+support_ed+job_awards+talents_used, data=emp_perf_encouragement)
+
+dev.off
+par(mfrow=c(2,2))
+summary(re_mod4)
+plot(re_mod4)
+dev.off
+par(mfrow=c(1,1))
+
+re_mod5 <-lm(PEI ~degree+agency-disability+supervisor_disc+super_suggest+performance_rec+support_ed+job_awards+talents_used+encouraged+skill_improve, data=emp_perf_encouragement)
+
+dev.off
+par(mfrow=c(2,2))
+summary(re_mod5)
+plot(re_mod5)
+dev.off
+par(mfrow=c(1,1))
+
+re_mod6 <-lm(PEI ~degree+agency-disability+supervisor_disc+super_suggest+performance_rec+support_ed+job_awards+performance_rec+talents_used+encouraged+skill_improve+., data=emp_perf_encouragement)
+
+dev.off
+par(mfrow=c(2,2))
+summary(re_mod6)
+plot(re_mod6)
+dev.off
+par(mfrow=c(1,1))
+emp_perf_encouragement_bkp <- emp_perf_encouragement 
+
+# Removing out liers.
+plot(hatvalues(re_mod6)) 
+#identify(hatvalues(re_mod6), col="red")
+# outlier identified 24015, 62678,75913
+emp_perf_encouragement <- emp_perf_encouragement[-c(24015, 62678,75913),]
+
+re_mod7 <-lm(PEI ~degree+agency-disability+supervisor_disc+super_suggest+performance_rec+support_ed+job_awards+performance_rec+talents_used+encouraged+skill_improve+., data=emp_perf_encouragement)
+
+dev.off
+par(mfrow=c(2,2))
+summary(re_mod7)
+plot(re_mod7)
+dev.off
+par(mfrow=c(1,1))
+
+
+
+plot(hatvalues(re_mod6)) 
+identify(hatvalues(re_mod6), col="red")
+
+
+
+
+
+# there is not much difference in the R squared values.
+
+emp_perf_encouragement_high <- read.csv("C:\\Users\\mihir\\Desktop\\Stats Project\\PEI_HighPop.csv",stringsAsFactors = T)
+
+emp_perf_encouragement_low <- read.csv("C:\\Users\\mihir\\Desktop\\Stats Project\\PEI_LowPop.csv",stringsAsFactors = T)
+
+
+t.test(emp_perf_encouragement_high$PEI,emp_perf_encouragement_low$PEI,alternative = "greater")
+
+emp_perf_encouragement_low$type <- "LOW"
+emp_perf_encouragement_high$type <- "high"
+
+emp_encouragement <- rbind(emp_perf_encouragement_low,emp_perf_encouragement_high)
+
+str(emp_encouragement)
+
+
+table <- table(emp_encouragement$agency, emp_encouragement$type)
+proptable <- prop.table(table)*100
+addmargins(proptable,2)
+
+plot(proptable,col=c("blue", "grey"),main="Agency and type")
+
+library(gplots)
+
+plotmeans(emp_encouragement$PEI~emp_encouragement$agency, xlab="Agency", ylab="Performace Encouragement Index", lwd=3, col="red", p=0.99)
+
+emp_engagement.aov <- aov(PEI~agency, data=emp_encouragement)
+
+summary(emp_engagement.aov) 
+
+emp_value.tk<-TukeyHSD(emp_engagement.aov)
+emp_value.tk
+
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
